@@ -25,7 +25,11 @@ export const BUSINESS_WHATSAPP = "919384741246";
    BACKEND API
 ========================================================= */
 
-const API_BASE_URL = "http://10.68.27.201:5000";
+const API_BASE_URL =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+    ? "http://localhost:5000"
+    : "https://murgan-jewels-and-goldsmith.onrender.com";
 
 /* =========================================================
    DEFAULT RATES
