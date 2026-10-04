@@ -22,10 +22,11 @@ import {
 ========================================================= */
 
 const API_BASE_URL =
-  window.location.hostname === "localhost" ||
+  import.meta.env.VITE_API_URL ||
+  (window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1"
     ? "http://localhost:5000"
-    : `http://${window.location.hostname}:5000`;
+    : `http://${window.location.hostname}:5000`);
 
 const BUSINESS_WHATSAPP = "919384741246";
 
