@@ -99,6 +99,7 @@ app.post("/api/auth/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    // Validate input
     if (!username || !password) {
       return res.status(400).json({
         success: false,
@@ -106,16 +107,18 @@ app.post("/api/auth/login", async (req, res) => {
       });
     }
 
+    // Find admin account
     const result = await pool.query(
       `
-      SELECT id, username, password_hash
-      FROM admin_users
-      WHERE username = $1
-      LIMIT 1
+        SELECT id, username, password_hash
+        FROM admin_users
+        WHERE username = $1
+        LIMIT 1
       `,
-      [username.trim()]
+      [String(username).trim()]
     );
 
+    // Admin not found
     if (result.rows.length === 0) {
       return res.status(401).json({
         success: false,
@@ -125,11 +128,58 @@ app.post("/api/auth/login", async (req, res) => {
 
     const admin = result.rows[0];
 
-    const passwordMatches = await bcrypt.compare(
-      password,
-      admin.password_hash
-    );
+    // Make sure the password hash exists
+    if (
+      !admin.password_hash ||
+      typeof admin.password_hash !== "string"
+    ) {
+      console.error(
+        "❌ Admin login error: password_hash is missing or invalid for username:",
+        admin.username
+      );
 
+      return res.status(500).json({
+        success: false,
+        message: "Admin password configuration is invalid",
+      });
+    }
+
+    const storedHash = admin.password_hash.trim();
+
+    // Basic bcrypt hash validation
+    if (!/^\$2[aby]\$\d{2}\$/.test(storedHash)) {
+      console.error(
+        "❌ Admin login error: invalid bcrypt password hash for username:",
+        admin.username
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Admin password configuration is invalid",
+      });
+    }
+
+    // Compare entered password with stored bcrypt hash
+    let passwordMatches = false;
+
+    try {
+      passwordMatches = await bcrypt.compare(
+        String(password),
+        storedHash
+      );
+    } catch (bcryptError) {
+      console.error(
+        "❌ Bcrypt password comparison error:",
+        bcryptError.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to verify admin password",
+      });
+    }
+
+    // Wrong password
     if (!passwordMatches) {
       return res.status(401).json({
         success: false,
@@ -137,25 +187,51 @@ app.post("/api/auth/login", async (req, res) => {
       });
     }
 
+    // JWT secret must exist
     if (!process.env.JWT_SECRET) {
+      console.error(
+        "❌ Admin login error: JWT_SECRET is missing"
+      );
+
       return res.status(500).json({
         success: false,
         message: "JWT_SECRET is missing",
       });
     }
 
-    const token = jwt.sign(
-      {
-        adminId: admin.id,
-        username: admin.username,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "8h",
-      }
+    // Create JWT token
+    let token;
+
+    try {
+      token = jwt.sign(
+        {
+          adminId: admin.id,
+          username: admin.username,
+        },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "8h",
+        }
+      );
+    } catch (jwtError) {
+      console.error(
+        "❌ JWT creation error:",
+        jwtError.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Unable to create admin authentication token",
+      });
+    }
+
+    // Successful login
+    console.log(
+      "✅ Admin login successful:",
+      admin.username
     );
 
-    res.json({
+    return res.json({
       success: true,
       message: "Admin login successful",
       token,
@@ -165,9 +241,12 @@ app.post("/api/auth/login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ Login error:", error.message);
+    console.error(
+      "❌ Admin login server error:",
+      error
+    );
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Admin login failed",
     });
