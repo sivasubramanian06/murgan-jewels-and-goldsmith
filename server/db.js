@@ -10,10 +10,14 @@ const pool = new Pool({
   port: Number(process.env.DB_PORT) || 5432,
   database: process.env.DB_NAME || "mgj_database",
   user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+ password: process.env.DB_PASSWORD,
 
-  // PostgreSQL connection settings
-  max: 10,
+ssl: {
+  rejectUnauthorized: false,
+},
+
+// PostgreSQL connection settings
+max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
 });
