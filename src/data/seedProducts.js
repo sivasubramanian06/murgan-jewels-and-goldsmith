@@ -77,7 +77,7 @@ const earringFiles = import.meta.glob(
 
 /* Women's Bracelets */
 const braceletFiles = import.meta.glob(
-  "../assets/bracelet/*.{jpg,jpeg,png,webp}",
+  "../assets/Bracelet/*.{jpg,jpeg,png,webp}",
   {
     eager: true,
     query: "?url",
