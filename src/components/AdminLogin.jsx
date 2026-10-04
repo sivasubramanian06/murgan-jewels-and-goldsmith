@@ -7,11 +7,14 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+// Local development uses localhost.
+// Production/Render uses VITE_API_URL.
 const API_BASE_URL =
-  window.location.hostname === "localhost" ||
+  import.meta.env.VITE_API_URL ||
+  (window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1"
     ? "http://localhost:5000"
-    : `http://${window.location.hostname}:5000`;
+    : `http://${window.location.hostname}:5000`);
 
 export default function AdminLogin({ onLogin, onBack }) {
   const [username, setUsername] = useState("");
