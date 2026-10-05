@@ -7082,7 +7082,7 @@ stoneCharge: calculation.stoneCharge,
 
 
 
-                      Making Charge / gram
+                      Making Charge / gram (₹)
 
 
 
