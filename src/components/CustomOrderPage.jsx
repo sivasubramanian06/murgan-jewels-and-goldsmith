@@ -219,16 +219,9 @@ export default function CustomOrderPage({
 
 
 
-    makingCharge: "900",
-
-wastage: "",
-
-stoneCharge: "0",
-
-otherCharge: "0",
-
-
-
+    wastage: "",
+    wastageAmount: "0",
+    hallmarkCharge: "0",
     advance: "0",
 
 
@@ -993,186 +986,23 @@ otherCharge: "0",
 
 
 
-  const calculation = useMemo(() => {
-
-
-
-    const weight = numberValue(form.weight);
-
-
-
-    const goldRate = numberValue(form.goldRate);
-
-
-
-    const makingRate = numberValue(
-
-
-
-      form.makingCharge
-
-
-
-    );
-
-
-
-    const stoneCharge = numberValue(
-
-
-
-      form.stoneCharge
-
-
-
-    );
-
-
-
-    const otherCharge = numberValue(
-
-
-
-      form.otherCharge
-
-
-
-    );
-
-
-
-    const advance = numberValue(
-
-
-
-      form.advance
-
-
-
-    );
-
-
-
-
-
-
-
-   const goldValue =
-
-  weight * goldRate;
-
-
-
-
-
-
-
-    const makingAmount =
-
-  weight * makingRate;
-
-
-
-
-
-
-
-    const total =
-
-
-
-      goldValue +
-
-
-
-      makingAmount +
-
-
-
-      stoneCharge +
-
-
-
-      otherCharge;
-
-
-
-
-
-
-
-    const balance = Math.max(
-
-
-
-      total - advance,
-
-
-
-      0
-
-
-
-    );
-
-
-
-
-
-
-
-    return {
-
-
-
-      weight,
-
-
-
-      goldRate,
-
-
-
-      makingRate,
-
-
-
-      stoneCharge,
-
-
-
-      otherCharge,
-
-
-
-      advance,
-
-
-
-      goldValue,
-
-
-
-      makingAmount,
-
-
-
-      total,
-
-
-
-      balance,
-
-
-
-    };
-
-
-
-  }, [form]);
-
-
-
+ const calculation = useMemo(() => {
+  const weight = numberValue(form.weight);
+  const goldRate = numberValue(form.goldRate);
+  const wastage = numberValue(form.wastage);
+  const wastageAmount = numberValue(form.wastageAmount);
+  const hallmarkCharge = numberValue(form.hallmarkCharge);
+  const advance = numberValue(form.advance);
+
+  const goldValue = weight * goldRate;
+  const total = goldValue + wastageAmount + hallmarkCharge;
+  const balance = Math.max(total - advance, 0);
+
+  return {
+    weight, goldRate, wastage, wastageAmount, hallmarkCharge,
+    advance, goldValue, total, balance,
+  };
+}, [form]);
 
 
 
@@ -1254,137 +1084,43 @@ otherCharge: "0",
 
 
     const message = `
-
-
-
 Hello ${order.customer},
-
-
-
-
-
-
 
 Thank you for choosing Sri Murugan Goldsmith and Jewels.
 
-
-
-
-
-
-
 ✨ CUSTOM JEWELLERY ORDER
-
-
-
-
-
-
 
 Order / Tracking Code: ${order.id}
 
-
-
-
-
-
-
 Jewellery: ${order.jewellery}
-
-
 
 Purity: ${order.purity}
 
-
-
 Weight: ${order.weight} g
-
-
-
-
-
-
 
 Gold Value: ${money(order.goldValue)}
 
-
-
-Making Charge: ${money(order.makingAmount)}
-
 Wastage: ${order.wastage}%
 
-Stone Charge: ${money(order.stoneCharge)}
+Wastage Amount: ${money(order.wastageAmount)}
 
+Hallmark Charge: ${money(order.hallmarkCharge)}
 
-
-Other Charge: ${money(order.otherCharge)}
-
-
-
-
-
-
-
-Estimated Total: ${money(order.total)}
-
-
+Total: ${money(order.total)}
 
 Advance: ${money(order.advance)}
 
-
-
 Balance: ${money(order.balance)}
 
-
-
-
-
-
-
-Delivery Date: ${
-
-
-
-      order.deliveryDate ||
-
-
-
-      "To be confirmed"
-
-
-
-    }
-
-
-
-
-
-
+Delivery Date: ${order.deliveryDate || "To be confirmed"}
 
 Status: ${order.status}
 
-
-
-
-
-
-
 You can use the tracking code to check your order progress.
-
-
-
-
-
-
 
 Sri Murugan Goldsmith and Jewels
 
-
-
 WhatsApp: 97894 81246
-
-
-
     `.trim();
 
 
@@ -1627,79 +1363,10 @@ WhatsApp: 97894 81246
 
     }
 
-
-
-
-
-
-
-    if (calculation.makingRate < 0) {
-
-
-
-      alert(
-
-
-
-        "Making charge cannot be negative."
-
-
-
-      );
-
-
-
+    if (calculation.wastageAmount < 0 || calculation.hallmarkCharge < 0) {
+      alert("Wastage amount and hallmark charge cannot be negative.");
       return;
-
-
-
     }
-
-
-
-
-
-
-
-    if (
-
-
-
-      calculation.stoneCharge < 0 ||
-
-
-
-      calculation.otherCharge < 0
-
-
-
-    ) {
-
-
-
-      alert(
-
-
-
-        "Charges cannot be negative."
-
-
-
-      );
-
-
-
-      return;
-
-
-
-    }
-
-
-
-
-
-
 
     if (calculation.advance < 0) {
 
@@ -1901,31 +1568,18 @@ WhatsApp: 97894 81246
 
 
 
-            makingCharge: calculation.makingRate,
+                        // Legacy fields kept for compatibility with the existing API.
+            makingCharge: 0,
+            wastage: numberValue(form.wastage),
+            stoneCharge: 0,
+            otherCharge: 0,
 
-wastage: numberValue(form.wastage),
+            // New Customer Order pricing values.
+            wastageAmount: calculation.wastageAmount,
+            hallmarkCharge: calculation.hallmarkCharge,
+            totalAmount: calculation.total,
 
-stoneCharge: calculation.stoneCharge,
-
-
-
-
-
-
-
-            otherCharge:
-
-
-
-              calculation.otherCharge,
-
-
-
-
-
-
-
-            advance:
+advance:
 
 
 
@@ -2066,295 +1720,24 @@ stoneCharge: calculation.stoneCharge,
 
 
       const whatsappOrder = {
-
-
-
-        id:
-
-
-
-          order.track_code ||
-
-
-
-          order.order_code,
-
-
-
-
-
-
-
-        customer:
-
-
-
-          saved.customer.name,
-
-
-
-
-
-
-
-        phone:
-
-
-
-          saved.customer.phone,
-
-
-
-
-
-
-
-        jewellery:
-
-
-
-          order.jewellery,
-
-
-
-
-
-
-
-        purity:
-
-
-
-          order.purity,
-
-
-
-
-
-
-
-        weight:
-
-
-
-          Number(
-
-
-
-            order.weight_grams
-
-
-
-          ),
-
-
-
-
-
-
-
-        goldValue:
-
-
-
-          Number(
-
-
-
-            serverCalculation.goldValue
-
-
-
-          ),
-
-
-
-
-
-
-
-        makingAmount:
-
-
-
-          Number(
-
-
-
-            serverCalculation.makingAmount
-
-
-
-          ),
-
-      wastage:
-        Number(order.wastage_grams || 0),
-
-
-
-
-
-
-
-        stoneCharge:
-
-
-
-          Number(
-
-
-
-            order.stone_charge
-
-
-
-          ),
-
-
-
-
-
-
-
-        otherCharge:
-
-
-
-          Number(
-
-
-
-            order.other_charge
-
-
-
-          ),
-
-
-
-
-
-
-
-        total:
-
-
-
-          Number(
-
-
-
-            order.total_amount
-
-
-
-          ),
-
-
-
-
-
-
-
-        advance:
-
-
-
-          Number(
-
-
-
-            order.advance_amount
-
-
-
-          ),
-
-
-
-
-
-
-
-        balance:
-
-
-
-          Number(
-
-
-
-            order.balance_amount
-
-
-
-          ),
-
-
-
-
-
-
-
-        deliveryDate:
-
-
-
-          order.delivery_date
-
-
-
-            ? String(
-
-
-
-                order.delivery_date
-
-
-
-              ).slice(0, 10)
-
-
-
-            : "",
-
-
-
-
-
-
-
-        status:
-
-
-
-          order.status ||
-
-
-
-          "Order Received",
-
-
-
-
-
-
-
-        phone:
-
-
-
-          saved.customer.phone,
-
-
-
+        id: order.track_code || order.order_code,
+        customer: saved.customer.name || form.name.trim(),
+        phone: saved.customer.phone || normalizedPhone,
+        jewellery: order.jewellery,
+        purity: order.purity,
+        weight: Number(order.weight_grams),
+        goldValue: calculation.goldValue,
+        wastage: calculation.wastage,
+        wastageAmount: calculation.wastageAmount,
+        hallmarkCharge: calculation.hallmarkCharge,
+        total: calculation.total,
+        advance: calculation.advance,
+        balance: calculation.balance,
+        deliveryDate: order.delivery_date
+          ? String(order.delivery_date).slice(0, 10)
+          : form.delivery || "",
+        status: order.status || "Order Received",
       };
-
-
-
-
-
-
 
       setLastOrder(
 
@@ -2428,21 +1811,9 @@ stoneCharge: calculation.stoneCharge,
 
 
 
-        makingCharge: "900",
-
-
-
         wastage: "",
-
-
-        stoneCharge: "0",
-
-
-
-        otherCharge: "0",
-
-
-
+        wastageAmount: "0",
+        hallmarkCharge: "0",
         advance: "0",
 
 
@@ -2687,21 +2058,9 @@ stoneCharge: calculation.stoneCharge,
 
 
 
-      makingCharge: "900",
-
-
-
       wastage: "",
-
-
-        stoneCharge: "0",
-
-
-
-      otherCharge: "0",
-
-
-
+      wastageAmount: "0",
+      hallmarkCharge: "0",
       advance: "0",
 
 
@@ -3783,7 +3142,17 @@ stoneCharge: calculation.stoneCharge,
               <div className="success-row">
                 <span>Wastage</span>
                 <strong>{lastOrder.wastage}%</strong>
-              </div>
+              
+
+                  <div className="estimate-row">
+                    <span>Wastage Amount</span>
+                    <strong>{money(lastOrder.wastageAmount)}</strong>
+                  </div>
+
+                  <div className="estimate-row">
+                    <span>Hallmark Charge</span>
+                    <strong>{money(lastOrder.hallmarkCharge)}</strong>
+                  </div></div>
 
 
 
@@ -3799,7 +3168,7 @@ stoneCharge: calculation.stoneCharge,
 
 
 
-                  Estimated Total
+                  Total
 
 
 
@@ -6141,204 +5510,49 @@ stoneCharge: calculation.stoneCharge,
 
               {/* CUSTOMER */}
 
-
               <section className="form-section">
-
-
                 <div className="section-heading">
-
-
-                  <div className="section-icon">
-
-
-                    <User size={19} />
-
-
-                  </div>
-
-
+                  <div className="section-icon"><User size={19} /></div>
                   <div>
-
-
-                    <h2>
-
-
-                      Customer Details
-
-
-                    </h2>
-
-
-                    <p>
-
-
-                      Enter the customer's basic
-
-
-                      information.
-
-
-                    </p>
-
-
+                    <h2>Customer Details</h2>
+                    <p>Enter the customer's basic information.</p>
                   </div>
-
-
                 </div>
-
 
                 <div className="form-grid">
-
-
                   <label className="admin-field">
-
-
-                    <span>
-
-
-                      Customer Name *
-
-
-                    </span>
-
-
+                    <span>Customer Name *</span>
                     <input
-
-
                       className="input"
-
-
                       type="text"
-
-
-                      placeholder="Customer name"
-
-
-                      value={
-
-
-                        form.name
-
-
-                      }
-
-
-                      onChange={(e) =>
-
-
-                        updateField(
-
-
-                          "name",
-
-
-                          e.target.value
-
-
-                        )
-
-
-                      }
-
-
-                      required
-
-
+                      placeholder="Enter customer name"
+                      value={form.name}
+                      onChange={(e) => updateField("name", e.target.value)}
                     />
-
-
                   </label>
-
 
                   <label className="admin-field">
-
-
-                    <span>
-
-
-                      Mobile Number *
-
-
-                    </span>
-
-
+                    <span>Mobile Number *</span>
                     <input
-
-
                       className="input"
-
-
                       type="tel"
-
-
                       inputMode="numeric"
-
-
                       maxLength="10"
-
-
                       placeholder="10-digit mobile number"
-
-
-                      value={
-
-
-                        form.phone
-
-
-                      }
-
-
-                      onChange={(e) =>
-
-
-                        updateField(
-
-
-                          "phone",
-
-
-                          e.target.value
-
-
-                            .replace(
-
-
-                              /\D/g,
-
-
-                              ""
-
-
-                            )
-
-
-                            .slice(0, 10)
-
-
-                        )
-
-
-                      }
-
-
-                      required
-
-
+                      value={form.phone}
+                      onChange={(e) => updateField("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
                     />
-
-
                   </label>
-
-
                 </div>
-
-
               </section>
 
 
 
-{/* JEWELLERY */}
+
+
+
+
+              {/* JEWELLERY */}
 
 
 
@@ -6964,613 +6178,41 @@ stoneCharge: calculation.stoneCharge,
 
               {/* CHARGES */}
 
-
-
-
-
-
-
               <section className="form-section">
-
-
-
-
-
-
-
                 <div className="section-heading">
-
-
-
-
-
-
-
-                  <div className="section-icon">
-
-
-
-                    <CircleDollarSign
-
-
-
-                      size={19}
-
-
-
-                    />
-
-
-
-                  </div>
-
-
-
-
-
-
-
+                  <div className="section-icon"><CircleDollarSign size={19} /></div>
                   <div>
-
-
-
-                    <h2>
-
-
-
-                      Charges & Payment
-
-
-
-                    </h2>
-
-
-
-
-
-
-
-                    <p>
-
-
-
-                      Add making, stone,
-
-
-
-                      other charges and advance.
-
-
-
-                    </p>
-
-
-
+                    <h2>Charges & Payment</h2>
+                    <p>Add wastage amount, hallmark charge and advance payment.</p>
                   </div>
-
-
-
-
-
-
-
                 </div>
-
-
-
-
-
-
 
                 <div className="form-grid three">
-
-
-
-
-
-
-
                   <label className="admin-field">
-
-
-
-
-
-
-
-                    <span>
-
-
-
-                      Making Charge / gram (₹)
-
-
-
-                    </span>
-
-
-
-
-
-
-
-                    <input
-
-
-
-                      className="input"
-
-
-
-                      type="number"
-
-
-
-                      min="0"
-
-
-
-                      step="1"
-
-
-
-                      value={
-
-
-
-                        form.makingCharge
-
-
-
-                      }
-
-
-
-                      onChange={(e) =>
-
-
-
-                        updateField(
-
-
-
-                          "makingCharge",
-
-
-
-                          e.target.value
-
-
-
-                        )
-
-
-
-                      }
-
-
-
-                    />
-
-
-
-
-
-
-
+                    <span>Wastage (%)</span>
+                    <input className="input" type="number" min="0" max="100" step="0.01" placeholder="Example: 6" value={form.wastage} onChange={(e) => updateField("wastage", e.target.value)} />
                   </label>
 
-          <label className="admin-field">
-
-            <span>
-              Wastage · %
-            </span>
-
-            <input
-              className="input"
-              type="number"
-              min="0"
-              max="100"
-              step="0.1"
-              placeholder="Example: 6"
-              value={form.wastage}
-              onChange={(e) =>
-                updateField("wastage", e.target.value)
-              }
-            />
-
-          </label>
-
-
-
-
-
-
-
                   <label className="admin-field">
-
-
-
-
-
-
-
-                    <span>
-
-
-
-                      Stone Charge
-
-
-
-                    </span>
-
-
-
-
-
-
-
-                    <input
-
-
-
-                      className="input"
-
-
-
-                      type="number"
-
-
-
-                      min="0"
-
-
-
-                      step="1"
-
-
-
-                      value={
-
-
-
-                        form.stoneCharge
-
-
-
-                      }
-
-
-
-                      onChange={(e) =>
-
-
-
-                        updateField(
-
-
-
-                          "stoneCharge",
-
-
-
-                          e.target.value
-
-
-
-                        )
-
-
-
-                      }
-
-
-
-                    />
-
-
-
-
-
-
-
+                    <span>Wastage Amount (₹) *</span>
+                    <input className="input" type="number" min="0" step="0.01" placeholder="Enter wastage amount" value={form.wastageAmount} onChange={(e) => updateField("wastageAmount", e.target.value)} />
                   </label>
 
-
-
-
-
-
-
                   <label className="admin-field">
-
-
-
-
-
-
-
-                    <span>
-
-
-
-                      Other Charge
-
-
-
-                    </span>
-
-
-
-
-
-
-
-                    <input
-
-
-
-                      className="input"
-
-
-
-                      type="number"
-
-
-
-                      min="0"
-
-
-
-                      step="1"
-
-
-
-                      value={
-
-
-
-                        form.otherCharge
-
-
-
-                      }
-
-
-
-                      onChange={(e) =>
-
-
-
-                        updateField(
-
-
-
-                          "otherCharge",
-
-
-
-                          e.target.value
-
-
-
-                        )
-
-
-
-                      }
-
-
-
-                    />
-
-
-
-
-
-
-
+                    <span>Hallmark Charge (₹)</span>
+                    <input className="input" type="number" min="0" step="1" placeholder="Example: 100" value={form.hallmarkCharge} onChange={(e) => updateField("hallmarkCharge", e.target.value)} />
                   </label>
 
-
-
-
-
-
-
                   <label className="admin-field">
-
-
-
-
-
-
-
-                    <span>
-
-
-
-                      Advance
-
-
-
-                    </span>
-
-
-
-
-
-
-
-                    <input
-
-
-
-                      className="input"
-
-
-
-                      type="number"
-
-
-
-                      min="0"
-
-
-
-                      step="1"
-
-
-
-                      value={
-
-
-
-                        form.advance
-
-
-
-                      }
-
-
-
-                      onChange={(e) =>
-
-
-
-                        updateField(
-
-
-
-                          "advance",
-
-
-
-                          e.target.value
-
-
-
-                        )
-
-
-
-                      }
-
-
-
-                    />
-
-
-
-
-
-
-
+                    <span>Advance (₹)</span>
+                    <input className="input" type="number" min="0" step="1" placeholder="Example: 5000" value={form.advance} onChange={(e) => updateField("advance", e.target.value)} />
                   </label>
 
-
-
-
-
-
-
                   <label className="admin-field">
-
-
-
-
-
-
-
-                    <span>
-
-
-
-                      Preferred Delivery Date
-
-
-
-                    </span>
-
-
-
-
-
-
-
-                    <input
-
-
-
-                      className="input"
-
-
-
-                      type="date"
-
-
-
-                      value={
-
-
-
-                        form.delivery
-
-
-
-                      }
-
-
-
-                      onChange={(e) =>
-
-
-
-                        updateField(
-
-
-
-                          "delivery",
-
-
-
-                          e.target.value
-
-
-
-                        )
-
-
-
-                      }
-
-
-
-                    />
-
-
-
-
-
-
-
+                    <span>Preferred Delivery Date</span>
+                    <input className="input" type="date" value={form.delivery} onChange={(e) => updateField("delivery", e.target.value)} />
                   </label>
-
-
-
-
-
-
-
                 </div>
-
-
-
-
-
-
-
               </section>
 
 
@@ -8188,201 +6830,19 @@ stoneCharge: calculation.stoneCharge,
 
 
                   <div className="estimate-row">
-
-
-
-                    <span>
-
-
-
-                      Gold Value
-
-
-
-                    </span>
-
-
-
-
-
-
-
-                    <strong>
-
-
-
-                      {money(
-
-
-
-                        calculation.goldValue
-
-
-
-                      )}
-
-
-
-                    </strong>
-
-
-
+                    <span>Wastage</span>
+                    <strong>{numberValue(form.wastage)}%</strong>
                   </div>
-
-
-
-
-
-
 
                   <div className="estimate-row">
-
-
-
-                    <span>
-
-
-
-                      Making Charge
-
-
-
-                    </span>
-
-
-
-
-
-
-
-                    <strong>
-
-
-
-                      {money(
-
-
-
-                        calculation.makingAmount
-
-
-
-                      )}
-
-
-
-                    </strong>
-
-
-
+                    <span>Wastage Amount</span>
+                    <strong>{money(calculation.wastageAmount)}</strong>
                   </div>
-
-          <div className="estimate-row">
-            <span>Wastage</span>
-            <strong>{numberValue(form.wastage)}%</strong>
-          </div>
-
-
-
-
-
-
 
                   <div className="estimate-row">
-
-
-
-                    <span>
-
-
-
-                      Stone Charge
-
-
-
-                    </span>
-
-
-
-
-
-
-
-                    <strong>
-
-
-
-                      {money(
-
-
-
-                        calculation.stoneCharge
-
-
-
-                      )}
-
-
-
-                    </strong>
-
-
-
+                    <span>Hallmark Charge</span>
+                    <strong>{money(calculation.hallmarkCharge)}</strong>
                   </div>
-
-
-
-
-
-
-
-                  <div className="estimate-row">
-
-
-
-                    <span>
-
-
-
-                      Other Charge
-
-
-
-                    </span>
-
-
-
-
-
-
-
-                    <strong>
-
-
-
-                      {money(
-
-
-
-                        calculation.otherCharge
-
-
-
-                      )}
-
-
-
-                    </strong>
-
-
-
-                  </div>
-
-
-
-
-
-
 
                   <div className="estimate-row total">
 
@@ -8392,7 +6852,7 @@ stoneCharge: calculation.stoneCharge,
 
 
 
-                      Estimated Total
+                      Total
 
 
 
